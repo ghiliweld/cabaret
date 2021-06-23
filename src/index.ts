@@ -1,7 +1,8 @@
 import { match } from "ts-pattern";
 
-export interface Cape<T> {
-  value: T | { [key: string]: Cape<T> };
+
+export interface Cape<T, K extends keyof T> {
+  value: T | { K: Cape<T[K], keyof T[K]> };
   version: number;
 }
 
@@ -113,6 +114,6 @@ export interface Cape<T> {
 */
 
 
-export const merge = <T>(a: Cape<T>, b: Cape<T>): Cape<T> => {
+export const merge = <T, K extends keyof T>(a: Cape<T, K>, b: Cape<T, K>): Cape<T, K> => {
   return a;
 };
