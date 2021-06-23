@@ -46,7 +46,7 @@ export interface Shelf<T> {
                 !Assign diff to be the result of merging a[0][k] and the current shelf for b
                 let diff = shelf.merge(a[0][k], v, dont_modify)
                 if (diff) {
-                    !If diff is not null
+                    !If diff is not null, set change to be a shelf with an empty object for value, and add a key shelf pair where the shelf is diff
                     if (!change) change = [{}, b[1]]
                     change[0][k] = diff
                 }
