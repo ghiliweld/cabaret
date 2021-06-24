@@ -1,11 +1,3 @@
-import { match } from "ts-pattern";
-
-
-export interface Cape<T> {
-  value: T | { [K in keyof T]: Cape<T[K]>};
-  version: number;
-}
-
 /* NOTES
 
     say we have a document of type Doc,
@@ -108,7 +100,26 @@ export interface Cape<T> {
     wtv we define that to be
 */
 
+type Primitive = string | number | boolean
+
+const isPrimitive = (arg: any) => {
+    return typeof arg === 'string' || typeof arg === 'number' || typeof arg === 'boolean'
+}
+
+
+export interface Cape<T> {
+    value: Primitive | { [K in keyof T]: Cape<T[K]>};
+    version: number;
+}
+
 
 export const merge = <T>(a: Cape<T>, b: Cape<T>): Cape<T> => {
-  return a;
+  if (a.version > b.version) return a
+  else if (a.version < b.version) return b
+  else {
+    if (isPrimitive(a.value)) {
+        
+    }
+    return a
+  }
 };
