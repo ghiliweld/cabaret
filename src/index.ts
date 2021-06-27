@@ -70,7 +70,6 @@
     }
 */
 
-
 /*
     match (a, b) with
     | null, null => null
@@ -100,26 +99,44 @@
     wtv we define that to be
 */
 
-type Primitive = string | number | boolean
+type Primitive = string | number | boolean;
 
 const isPrimitive = (arg: any) => {
-    return typeof arg === 'string' || typeof arg === 'number' || typeof arg === 'boolean'
-}
-
+  return (
+    typeof arg === "string" ||
+    typeof arg === "number" ||
+    typeof arg === "boolean"
+  );
+};
 
 export interface Cape<T> {
-    value: Primitive | { [K in keyof T]: Cape<T[K]>};
-    version: number;
+  value: Primitive | { [K in keyof T]: Cape<T[K]> };
+  version: number;
 }
+
+export const create = <T extends Primitive, U>(t: T | {[key: string]: any}) => {
+    if (isPrimitive(t)) {
+        return {
+            value: t,
+            version: 0
+        }
+    } else if (typeof t === 'object'){
+        let cape: {[key: string] : any} = {}
+        for (let k in t) {
+            cape[k] = create(t[k])
+        }
+        return cape
+    }
+    
+};
 
 
 export const merge = <T>(a: Cape<T>, b: Cape<T>): Cape<T> => {
-  if (a.version > b.version) return a
-  else if (a.version < b.version) return b
+  if (a.version > b.version) return a;
+  else if (a.version < b.version) return b;
   else {
     if (isPrimitive(a.value)) {
-        
     }
-    return a
+    return a;
   }
 };
