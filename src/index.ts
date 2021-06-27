@@ -133,17 +133,21 @@ export const create = <T>(t: CapeInput<T>) => {
   }
 };
 
-export const merge = <T>(a: Cape<T>, b: Cape<T>): Cape<T> => {
+export const merge = <T>(a: Cape<T>, b: Cape<T>) => {
   if (a.version > b.version) return a;
   else if (a.version < b.version) return b;
   else {
     if (isPrimitive(a.value)) {
         return a.value > b.value ? a : b;
-    } else {
-        for (let k in a.value) {
-            a.value[k] = merge(a.value[k], b.value[k]);
+    } else if (typeof a.value === 'object' && typeof b.value === 'object') {
+        let cape: {value: any, version: number} = {
+            value: {},
+            version: a.version + 1
         }
-        return a;
+        for (let k in a.value) {
+            cape.value[k] = merge(a.value[k], b.value[k]);
+        }
+        return cape as Cape<T>;
     }
   }
 };
