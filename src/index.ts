@@ -138,7 +138,12 @@ export const merge = <T>(a: Cape<T>, b: Cape<T>): Cape<T> => {
   else if (a.version < b.version) return b;
   else {
     if (isPrimitive(a.value)) {
+        return a.value > b.value ? a : b;
+    } else {
+        for (let k in a.value) {
+            a.value[k] = merge(a.value[k], b.value[k]);
+        }
+        return a;
     }
-    return a;
   }
 };
