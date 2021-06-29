@@ -101,9 +101,9 @@
 
 type Primitive = string | number | boolean;
 
-type CapeValue<T> = T extends Primitive ? T : { [K in keyof T]: Cape<T[K]> };
+type CapeValue<T> = Primitive | { [k: string]: Cape<T> };
 
-type CapeInput<T> = T extends Primitive ? T : { [K in keyof T]: T[K] };
+type CapeInput<T> = Primitive | { [k: string]: CapeInput<T> };
 
 const isPrimitive = (arg: any) => {
   return (
@@ -121,16 +121,20 @@ export interface Cape<T> {
 export const create = <T>(t: CapeInput<T>): Cape<T> => {
   if (isPrimitive(t)) {
     return {
-      value: t,
+      value: t as CapeValue<T>,
       version: 0,
     };
   } else if (typeof t === "object") {
-    let cape: { [key: string]: any } = { version: 0 };
+    let cape: { value: { [k: string]: Cape<T> }; version: number } = {
+      value: {},
+      version: 0,
+    };
     for (let k in t) {
-      cape[k] = create(t[k]);
+      cape.value[k] = create(t[k]);
     }
-    return cape as Cape<T>;
+    return cape;
   }
+  return { value: "", version: 0 };
 };
 
 export const merge = <T>(a: Cape<T>, b: Cape<T>) => {
@@ -138,16 +142,16 @@ export const merge = <T>(a: Cape<T>, b: Cape<T>) => {
   else if (a.version < b.version) return b;
   else {
     if (isPrimitive(a.value)) {
-        return a.value > b.value ? a : b;
-    } else if (typeof a.value === 'object' && typeof b.value === 'object') {
-        let cape: {value: any, version: number} = {
-            value: {},
-            version: a.version + 1
-        }
-        for (let k in a.value) {
-            cape.value[k] = merge(a.value[k], b.value[k]);
-        }
-        return cape as Cape<T>;
+      return a.value > b.value ? a : b;
+    } else if (typeof a.value === "object" && typeof b.value === "object") {
+      let cape: { value: any; version: number } = {
+        value: {},
+        version: a.version + 1,
+      };
+      for (let k in a.value) {
+        cape.value[k] = merge(a.value[k], b.value[k]);
+      }
+      return cape as Cape<T>;
     }
   }
 };
