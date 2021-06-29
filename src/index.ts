@@ -101,9 +101,9 @@
 
 type Primitive = string | number | boolean;
 
-type CapeValue<T> = Primitive | { [K in keyof T]: Cape<T[K]> };
+type CapeValue<T> = T extends Primitive ? T : { [K in keyof T]: Cape<T[K]> };
 
-type CapeInput<T> = Primitive | { [K in keyof T]: T[K] };
+type CapeInput<T> = T extends Primitive ? T : { [K in keyof T]: T[K] };
 
 const isPrimitive = (arg: any) => {
   return (
@@ -118,12 +118,12 @@ export interface Cape<T> {
   version: number;
 }
 
-export const create = <T>(t: CapeInput<T>) => {
+export const create = <T>(t: CapeInput<T>): Cape<T> => {
   if (isPrimitive(t)) {
     return {
       value: t,
       version: 0,
-    } as Cape<T>;
+    };
   } else if (typeof t === "object") {
     let cape: { [key: string]: any } = { version: 0 };
     for (let k in t) {
