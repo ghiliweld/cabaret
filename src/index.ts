@@ -77,7 +77,7 @@ export type Cape<T> = T extends Primitive
 //     return { value: "", version: 0 };
 // };
 
-export const merge = <T extends Primitive | {[K in keyof T] : T[K]}>(a: Cape<T>, b: Cape<T>): Cape<T> => {
+export const merge = <T>(input: PrimitiveInput<T> | NestedInput<T>): Cape<T> => {
   if (a.version > b.version) return a;
   else if (a.version < b.version) return b;
   else if (isPrimitive(a.value)) {
