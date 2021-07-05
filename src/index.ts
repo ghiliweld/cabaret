@@ -49,7 +49,7 @@ export type PrimitiveCape<T extends Primitive> = {
   version: number;
 };
 
-export type NullCape = { value: {}, version: -1 };
+export type NullCape = { value: {}; version: -1 };
 
 export type Cape<T> = T extends Primitive
   ? PrimitiveCape<T>
