@@ -19,7 +19,7 @@
     }
 */
 
-import { ADT, match, matchI } from "ts-adt";
+//import { ADT, match, matchI } from "ts-adt";
 
 type Primitive = string | number | boolean | symbol | bigint;
 
@@ -50,6 +50,16 @@ export type PrimitiveCape<T extends Primitive> = {
   version: number;
 };
 
+export type PrimitiveInput<T extends Primitive> = [
+  PrimitiveCape<T>,
+  PrimitiveCape<T>
+];
+
+export type NestedInput<T extends { [K in keyof T]: T[K] }> = [
+  NestedCape<T>,
+  NestedCape<T>
+];
+
 export type NullCape = { value: {}; version: -1 };
 
 export type Cape<T> = T extends Primitive
@@ -77,50 +87,54 @@ export type Cape<T> = T extends Primitive
 //     return { value: "", version: 0 };
 // };
 
-export const merge = <T>(input: PrimitiveInput<T> | NestedInput<T>): Cape<T> => {
+export const merge = <T extends Primitive, U extends { [K in keyof T]: T[K] }>(
+  input: PrimitiveInput<T> | NestedInput<U>
+) => {
+  let a = input[0]
+  let b = input[1]
   if (a.version > b.version) return a;
   else if (a.version < b.version) return b;
   else if (isPrimitive(a.value)) {
     return a.value > b.value ? a : b;
-  } else if (typeof a.value === "object") {
+  } else if (typeof a.value === "object" && typeof b.value === 'object') {
     let cape: { value: { [key: string]: any }; version: number } = {
       value: {},
       version: a.version + 1,
     };
     for (let k in a.value) {
-      cape.value[k] = merge(a.value[k], b.value[k]);
+      cape.value[k] = merge([a.value[k], b.value[k]]);
     }
     return cape as Cape<T>;
   }
 };
 
-export const merge = <T extends Primitive>(
-  a: PrimitiveCape<T>,
-  b: PrimitiveCape<T>
-): PrimitiveCape<T> => {
-  if (a.version > b.version) return a;
-  else if (a.version < b.version) return b;
-  else {
-    return a.value > b.value
-      ? { value: a.value, version: a.version + 1 }
-      : { value: b.value, version: b.version + 1 };
-  }
-};
+// export const merge = <T extends Primitive>(
+//   a: PrimitiveCape<T>,
+//   b: PrimitiveCape<T>
+// ): PrimitiveCape<T> => {
+//   if (a.version > b.version) return a;
+//   else if (a.version < b.version) return b;
+//   else {
+//     return a.value > b.value
+//       ? { value: a.value, version: a.version + 1 }
+//       : { value: b.value, version: b.version + 1 };
+//   }
+// };
 
-export const merge = <T extends { [K in keyof T]: T[K] }>(
-  a: NestedCape<T>,
-  b: NestedCape<T>
-): NestedCape<T> => {
-  if (a.version > b.version) return a;
-  else if (a.version < b.version) return b;
-  else {
-    let cape: { value: { [key: string]: any }; version: number } = {
-      value: {},
-      version: a.version + 1,
-    };
-    for (let k in a.value) {
-      cape.value[k] = merge(a.value[k], b.value[k]);
-    }
-    return cape as NestedCape<T>;
-  }
-};
+// export const merge = <T extends { [K in keyof T]: T[K] }>(
+//   a: NestedCape<T>,
+//   b: NestedCape<T>
+// ): NestedCape<T> => {
+//   if (a.version > b.version) return a;
+//   else if (a.version < b.version) return b;
+//   else {
+//     let cape: { value: { [key: string]: any }; version: number } = {
+//       value: {},
+//       version: a.version + 1,
+//     };
+//     for (let k in a.value) {
+//       cape.value[k] = merge(a.value[k], b.value[k]);
+//     }
+//     return cape as NestedCape<T>;
+//   }
+// };
