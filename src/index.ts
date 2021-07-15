@@ -19,13 +19,11 @@
     }
 */
 
-//import { ADT, match, matchI } from "ts-adt";
-
 type Primitive = string | number | boolean | symbol | bigint;
 
-type CapeInput<T> = Primitive | { [k: string]: CapeInput<T> };
+type CapeMap = { [k: string]: Cape };
 
-const isPrimitive = (arg: any) => {
+const isPrimitive = (arg: any): boolean => {
   return (
     typeof arg === "string" ||
     typeof arg === "number" ||
@@ -35,106 +33,82 @@ const isPrimitive = (arg: any) => {
   );
 };
 
-// export type Cape<T> = ADT<{
-//     primitive: { value: T, version: number },
-//     nested: { value: { [k: string]: Cape<T> }, version: number }
-// }>
+export abstract class Cape {
+  constructor(
+    public value: Primitive | CapeMap,
+    public version: number
+  ) {}
+}
 
-export type NestedCape<T extends { [K in keyof T]: T[K] }> = {
-  value: T;
-  version: number;
+export class PrimitiveCape extends Cape {
+  constructor(value: Primitive, version: number) {
+    super(value, version);
+  }
+}
+
+
+export class NestedCape extends Cape {
+  constructor(value: CapeMap, version: number) {
+    super(value, version);
+  }
+}
+
+export class NullCape extends Cape {
+  constructor() {
+    super("", -1);
+  }
+}
+
+export const create = (t: any): Cape => {
+  if (isPrimitive(t)) {
+    return new PrimitiveCape(t, 0);
+  } else if (typeof t === "object") {
+    let cape: CapeMap = {};
+    for (let key in t) {
+      cape[key] = create(t[key]);
+    }
+    return new NestedCape(cape, 0);
+  }
+  return new NullCape();
 };
 
-export type PrimitiveCape<T extends Primitive> = {
-  value: T;
-  version: number;
-};
+export const merge = (a: Cape, b: Cape): Cape => {
+  //If at least one is null
+  if (a instanceof NullCape) return b;
+  else if (b instanceof NullCape) return a;
 
-export type PrimitiveInput<T extends Primitive> = [
-  PrimitiveCape<T>,
-  PrimitiveCape<T>
-];
-
-export type NestedInput<T extends { [K in keyof T]: T[K] }> = [
-  NestedCape<T>,
-  NestedCape<T>
-];
-
-export type NullCape = { value: {}; version: -1 };
-
-export type Cape<T> = T extends Primitive
-  ? PrimitiveCape<T>
-  : T extends { [K in keyof T]: T[K] }
-  ? NestedCape<T>
-  : NullCape;
-
-// export const create = <T>(t: T): Cape<T> => {
-//     if (isPrimitive(t)) {
-//         return {
-//             value: t,
-//             version: 0
-//         };
-//     } else if (typeof t === "object") {
-//         let cape: { value: { [k: string]: Cape<T> }; version: number } = {
-//         value: {},
-//         version: 0,
-//         };
-//         for (let k in t) {
-//         cape.value[k] = create(t[k]);
-//         }
-//         return cape;
-//     }
-//     return { value: "", version: 0 };
-// };
-
-export const merge = <T extends Primitive, U extends { [K in keyof T]: T[K] }>(
-  input: PrimitiveInput<T> | NestedInput<U>
-) => {
-  let a = input[0]
-  let b = input[1]
+  //If versions are different
   if (a.version > b.version) return a;
   else if (a.version < b.version) return b;
-  else if (isPrimitive(a.value)) {
+
+  //If versions are the same
+  else if (a instanceof PrimitiveCape && b instanceof PrimitiveCape) {
     return a.value > b.value ? a : b;
-  } else if (typeof a.value === "object" && typeof b.value === 'object') {
-    let cape: { value: { [key: string]: any }; version: number } = {
-      value: {},
-      version: a.version + 1,
-    };
-    for (let k in a.value) {
-      cape.value[k] = merge([a.value[k], b.value[k]]);
-    }
-    return cape as Cape<T>;
+  } else if (a instanceof NestedCape && b instanceof PrimitiveCape) {
+  } else if (a instanceof PrimitiveCape && b instanceof NestedCape) {
+  } else if (a instanceof NestedCape && b instanceof NestedCape) {
   }
+
+  return new NullCape();
 };
 
-// export const merge = <T extends Primitive>(
-//   a: PrimitiveCape<T>,
-//   b: PrimitiveCape<T>
-// ): PrimitiveCape<T> => {
+// export const merge = <T extends Primitive, U extends { [K in keyof T]: T[K] }>(
+//   input: PrimitiveInput<T> | NestedInput<U>
+// ) => {
+//   let a = input[0];
+//   let b = input[1];
 //   if (a.version > b.version) return a;
 //   else if (a.version < b.version) return b;
-//   else {
-//     return a.value > b.value
-//       ? { value: a.value, version: a.version + 1 }
-//       : { value: b.value, version: b.version + 1 };
-//   }
-// };
-
-// export const merge = <T extends { [K in keyof T]: T[K] }>(
-//   a: NestedCape<T>,
-//   b: NestedCape<T>
-// ): NestedCape<T> => {
-//   if (a.version > b.version) return a;
-//   else if (a.version < b.version) return b;
-//   else {
+//   else if (isPrimitive(a.value)) {
+//     return a.value > b.value ? a : b;
+//   } else if (typeof a.value === "object" && typeof b.value === "object") {
 //     let cape: { value: { [key: string]: any }; version: number } = {
 //       value: {},
 //       version: a.version + 1,
 //     };
 //     for (let k in a.value) {
-//       cape.value[k] = merge(a.value[k], b.value[k]);
+//       cape.value[k] = merge([a.value[k], b.value[k]]);
 //     }
-//     return cape as NestedCape<T>;
+//     return cape as Cape<T>;
 //   }
 // };
