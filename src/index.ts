@@ -19,7 +19,7 @@
     }
 */
 
-type Primitive = string | number | boolean | symbol | bigint;
+type Primitive = string | number | boolean | bigint;
 
 type CapeMap = { [k: string]: Cape };
 
@@ -28,52 +28,53 @@ const isPrimitive = (arg: any): boolean => {
     typeof arg === "string" ||
     typeof arg === "number" ||
     typeof arg === "boolean" ||
-    typeof arg === "symbol" ||
     typeof arg === "bigint"
   );
 };
 
 export abstract class Cape {
   constructor(
-    public value: Primitive | CapeMap,
     public version: number
   ) {}
 }
 
 export class PrimitiveCape extends Cape {
-  constructor(value: Primitive, version: number) {
-    super(value, version);
+  constructor(version: number, public value: Primitive) {
+    super(version);
   }
 }
 
-
 export class NestedCape extends Cape {
-  constructor(value: CapeMap, version: number) {
-    super(value, version);
+  constructor(version: number, public value: CapeMap) {
+    super(version);
   }
 }
 
 export class NullCape extends Cape {
+  public value: null;
   constructor() {
-    super("", -1);
+    super(-1)
+    this.value = null
   }
 }
 
 export const create = (t: any): Cape => {
   if (isPrimitive(t)) {
-    return new PrimitiveCape(t, 0);
+    return new PrimitiveCape(0, t);
   } else if (typeof t === "object") {
     let cape: CapeMap = {};
     for (let key in t) {
       cape[key] = create(t[key]);
     }
-    return new NestedCape(cape, 0);
+    return new NestedCape(0, cape);
   }
   return new NullCape();
 };
 
 export const merge = (a: Cape, b: Cape): Cape => {
   //If at least one is null
+  if (!a) return b;
+  else if (!b) return a;
   if (a instanceof NullCape) return b;
   else if (b instanceof NullCape) return a;
 
@@ -87,6 +88,17 @@ export const merge = (a: Cape, b: Cape): Cape => {
   } else if (a instanceof NestedCape && b instanceof PrimitiveCape) {
   } else if (a instanceof PrimitiveCape && b instanceof NestedCape) {
   } else if (a instanceof NestedCape && b instanceof NestedCape) {
+    let cape: CapeMap = {}
+    if (Object.keys(a.value).length > Object.keys(b.value).length) {
+      for (let key in a.value) {
+        cape[key] = merge(a.value[key], b.value[key])
+      }
+    } else {
+      for (let key in b.value) {
+        cape[key] = merge(a.value[key], b.value[key])
+      }
+    }
+    return new NestedCape(a.version, cape);
   }
 
   return new NullCape();
