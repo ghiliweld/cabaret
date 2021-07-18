@@ -33,9 +33,7 @@ const isPrimitive = (arg: any): boolean => {
 };
 
 export abstract class Cape {
-  constructor(
-    public version: number
-  ) {}
+  constructor(public version: number) {}
 }
 
 export class PrimitiveCape extends Cape {
@@ -53,8 +51,8 @@ export class NestedCape extends Cape {
 export class NullCape extends Cape {
   public value: null;
   constructor() {
-    super(-1)
-    this.value = null
+    super(-1);
+    this.value = null;
   }
 }
 
@@ -81,21 +79,21 @@ export const merge = (a: Cape, b: Cape): Cape => {
   //If versions are different
   if (a.version > b.version) return a;
   else if (a.version < b.version) return b;
-
+  
   //If versions are the same
   else if (a instanceof PrimitiveCape && b instanceof PrimitiveCape) {
     return a.value > b.value ? a : b;
   } else if (a instanceof NestedCape && b instanceof PrimitiveCape) {
   } else if (a instanceof PrimitiveCape && b instanceof NestedCape) {
   } else if (a instanceof NestedCape && b instanceof NestedCape) {
-    let cape: CapeMap = {}
+    let cape: CapeMap = {};
     if (Object.keys(a.value).length > Object.keys(b.value).length) {
       for (let key in a.value) {
-        cape[key] = merge(a.value[key], b.value[key])
+        cape[key] = merge(a.value[key], b.value[key]);
       }
     } else {
       for (let key in b.value) {
-        cape[key] = merge(a.value[key], b.value[key])
+        cape[key] = merge(a.value[key], b.value[key]);
       }
     }
     return new NestedCape(a.version, cape);
@@ -103,24 +101,3 @@ export const merge = (a: Cape, b: Cape): Cape => {
 
   return new NullCape();
 };
-
-// export const merge = <T extends Primitive, U extends { [K in keyof T]: T[K] }>(
-//   input: PrimitiveInput<T> | NestedInput<U>
-// ) => {
-//   let a = input[0];
-//   let b = input[1];
-//   if (a.version > b.version) return a;
-//   else if (a.version < b.version) return b;
-//   else if (isPrimitive(a.value)) {
-//     return a.value > b.value ? a : b;
-//   } else if (typeof a.value === "object" && typeof b.value === "object") {
-//     let cape: { value: { [key: string]: any }; version: number } = {
-//       value: {},
-//       version: a.version + 1,
-//     };
-//     for (let k in a.value) {
-//       cape.value[k] = merge([a.value[k], b.value[k]]);
-//     }
-//     return cape as Cape<T>;
-//   }
-// };
