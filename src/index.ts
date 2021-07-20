@@ -83,8 +83,6 @@ export const merge = (a: Cape, b: Cape): Cape => {
   //If versions are the same
   else if (a instanceof PrimitiveCape && b instanceof PrimitiveCape) {
     return a.value > b.value ? a : b;
-  } else if (a instanceof NestedCape && b instanceof PrimitiveCape) {
-  } else if (a instanceof PrimitiveCape && b instanceof NestedCape) {
   } else if (a instanceof NestedCape && b instanceof NestedCape) {
     let cape: CapeMap = {};
     if (Object.keys(a.value).length > Object.keys(b.value).length) {
